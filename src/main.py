@@ -41,6 +41,12 @@ async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> 
         overwrites=overwrites
     )
 
+    # Printing welcome text to support channel.
+    welcome_file_path = "welcome.txt"
+    with open(welcome_file_path, "r") as welcome_file:
+        content = welcome_file.read()
+        await new_channel.send(content=content)
+
     return new_channel
 
 
@@ -93,12 +99,6 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
     # Creating new member support channel.
     new_support_channel = await create_support_channel(ctx, name)
     print(f"Successfully created support channel '{new_support_channel.name}'.")
-
-    # Printing welcome text to support channel.
-    welcome_file_path = "welcome.txt"
-    with open(welcome_file_path, "r") as welcome_file:
-        content = welcome_file.read()
-        await new_support_channel.send(content=content)
 
     # Registering new user in database.
     src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_support_channel.id)
