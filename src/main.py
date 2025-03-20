@@ -7,6 +7,7 @@ import discord
 import os
 import dotenv
 import sqlite3
+import src.database
 
 # Initializing environment.
 dotenv.load_dotenv()
@@ -16,35 +17,8 @@ intents: discord.Intents = discord.Intents.all()
 bot = discord.Bot(intents=intents)
 
 # Initializing database connection and creating tables.
-database: sqlite3.Connection = sqlite3.connect("database.db")
-
-def initialize_database(database_connection: sqlite3.Connection):
-    cursor: sqlite3.Cursor = database_connection.cursor()
-    cursor.execute("""
-        create table if not exists `registered_users` (
-          `id` integer not null primary key autoincrement,
-          `user_id` int not null,
-          `guild_id` int not null
-        )
-    """)
-
-initialize_database(database)
-
-# Returns True if the passed Discord user is registered in a selected Guild, otherwise returns False.
-def is_user_registered(database_connection: sqlite3.Connection, user_id: int, guild_id: int) -> bool:
-    cursor: sqlite3.Cursor = database_connection.cursor()
-    cursor.execute("SELECT id FROM registered_users WHERE user_id = ? AND guild_id = ?", (user_id, guild_id))
-
-    if not cursor.fetchone():
-        return False
-
-    return True
-
-def register_user_to_database(database_connection: sqlite3.Connection, user_id: int, guild_id: int):
-    cursor: sqlite3.Cursor = database_connection.cursor()
-    cursor.execute("INSERT INTO registered_users (user_id, guild_id) VALUES (?, ?)", (user_id, guild_id))
-    database_connection.commit()
-
+connection: sqlite3.Connection = sqlite3.connect("database.db")
+src.database.initialize(connection)
 
 @bot.event
 async def on_ready():
@@ -56,11 +30,10 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
     # Creating member object.
     member: discord.Member = ctx.guild.get_member(ctx.author.id)
 
-    if is_user_registered(database, ctx.author.id, ctx.guild.id):
+    # Updating existing support channel name.
+    if src.database.is_user_registered(connection, ctx.author.id, ctx.guild.id):
         print("User already registered!")
-    else:
-        register_user_to_database(database, ctx.author.id, ctx.guild.id)
-        print("Registering user...")
+        return
 
     # Setting member nickname.
     try:
@@ -93,6 +66,8 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
         overwrites=overwrites
     )
     print(f"Successfully created support channel '{new_channel_name}'.")
+
+    src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_channel.id)
 
     # End-user response.
     await ctx.respond("Successfully registered you to the support system!", ephemeral=True)
