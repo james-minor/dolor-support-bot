@@ -17,7 +17,7 @@ connection: sqlite3.Connection = sqlite3.connect("database.db")
 src.database.initialize(connection)
 
 def generate_channel_name(name: str) -> str:
-    return "-".join(name.lower().split()) + "-support"
+    return "ticket-" + "-".join(name.lower().split())
 
 
 async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> discord.TextChannel:
@@ -65,6 +65,14 @@ async def on_guild_join(guild: discord.Guild):
 
 @bot.command(description="Registers the user to the support system.")
 async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOptionType.string):
+    # Name parameter validation.
+    if len(name) < 1 or len(name) > 35:
+        await ctx.respond("Names must be between 1 and 35 characters long.", ephemeral=True)
+        return
+    if not name.replace(" ", "").isalpha():
+        await ctx.respond("Names may only contain letters.", ephemeral=True)
+        return
+
     # Creating member object.
     member: discord.Member = ctx.guild.get_member(ctx.author.id)
 
