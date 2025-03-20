@@ -60,7 +60,8 @@ async def on_guild_join(guild: discord.Guild):
     # Creating the support role (if it did not already exist).
     staff_role = await create_role(guild, "Support Staff")
     # Creating the generic registered user role (if it did not already exist).
-    registered_user_role = await create_role(guild, "Registered User")
+    student_role = await create_role(guild, "Student")
+    await student_role.edit(color=discord.Color(0x4499d5))
 
 
 @bot.command(description="Registers the user to the support system.")
@@ -111,12 +112,12 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
     # Registering new user in database.
     src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_support_channel.id)
 
-    # Adding member to Registered User role.
+    # Adding member to Student role.
     try:
-        registered_user_role: discord.Role = discord.utils.get(ctx.guild.roles, name="Registered User")
+        registered_user_role: discord.Role = discord.utils.get(ctx.guild.roles, name="Student")
         await ctx.author.add_roles(registered_user_role)
     except BaseException:
-        await ctx.respond("Could not give you Registered User role (does not work for administrators).", ephemeral=True)
+        await ctx.respond("Could not give you Student role (does not work for administrators).", ephemeral=True)
 
     # End-user response.
     await ctx.respond("Successfully registered you to the support system!", ephemeral=True)
