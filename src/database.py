@@ -27,3 +27,16 @@ def register_user(database_connection: sqlite3.Connection, user_id: int, guild_i
     cursor: sqlite3.Cursor = database_connection.cursor()
     cursor.execute("INSERT INTO registered_users (user_id, guild_id, support_channel_id) VALUES (?, ?, ?)", (user_id, guild_id, support_channel_id))
     database_connection.commit()
+
+
+def get_support_channel_id(database_connection: sqlite3.Connection, user_id: int, guild_id: int) -> int | None:
+    cursor: sqlite3.Cursor = database_connection.cursor()
+    cursor.execute("SELECT support_channel_id FROM registered_users WHERE user_id = ? AND guild_id = ?", (user_id, guild_id))
+
+    return cursor.fetchone()[0]
+
+
+def update_support_channel_id(database_connection: sqlite3.Connection, user_id: int, guild_id: int, support_channel_id: int):
+    cursor: sqlite3.Cursor = database_connection.cursor()
+    cursor.execute("UPDATE registered_users SET support_channel_id = ? WHERE user_id = ? AND guild_id = ?", (support_channel_id, user_id, guild_id))
+    database_connection.commit()
