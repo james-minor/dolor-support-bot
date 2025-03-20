@@ -50,13 +50,16 @@ async def on_ready():
     print(f"Support bot logged in as {bot.user}!")
 
 
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    # Creating the support role (if it did not already exist).
+    await create_role(guild, "Support Staff")
+    # Creating the generic registered user role (if it did not already exist).
+    await create_role(guild, "Registered User")
+
+
 @bot.command(description="Registers the user to the support system.")
 async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOptionType.string):
-    # Creating the support role (if it did not already exist).
-    support_role = await create_role(ctx.guild, "Support Staff")
-    # Creating the generic user role (if it did not already exist).
-    generic_role = await create_role(ctx.guild, "User")
-
     # Creating member object.
     member: discord.Member = ctx.guild.get_member(ctx.author.id)
 
