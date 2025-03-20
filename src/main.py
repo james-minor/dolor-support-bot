@@ -38,10 +38,9 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
         category = await ctx.guild.create_category("support")
 
     # Creating the support role (if it did not already exist).
-    if not discord.utils.get(ctx.guild.roles, name="Support Staff"):
-        support_role: discord.Role = await ctx.guild.create_role(name="Support Staff")
-    else:
-        support_role: discord.Role = discord.utils.get(ctx.guild.roles, name="Support Staff")
+    support_role = await create_role(ctx.guild, "Support Staff")
+    # Creating the generic user role (if it did not already exist).
+    generic_role = await create_role(ctx.guild, "User")
 
     # Creating role overrides to make member support channel private.
     overwrites = {
@@ -62,6 +61,18 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
     # End-user response.
     await ctx.respond("Successfully registered you to the support system!", ephemeral=True)
     print(f"Successfully registered user '{ctx.user}' to the support system.")
+
+
+# Attempts to create a user role in a selected guild. If the role already exists, returns the role object.
+# Otherwise, creates the role and returns the role object.
+async def create_role(guild: discord.Guild, role_name: str) -> discord.Role:
+    if not discord.utils.get(guild.roles, name=role_name):
+        new_role: discord.Role = await guild.create_role(name=role_name)
+        print(f"Successfully created role '{role_name}'.")
+    else:
+        new_role: discord.Role = discord.utils.get(guild.roles, name=role_name)
+
+    return new_role
 
 
 bot.run(str(os.getenv("DISCORD_API_TOKEN")))
