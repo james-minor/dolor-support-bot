@@ -22,6 +22,7 @@ src.database.initialize(connection)
 def generate_channel_name(name: str) -> str:
     return "-".join(name.lower().split()) + "-support"
 
+
 async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> discord.TextChannel:
     # Creating support channel category (if it did not already exist).
     category = discord.utils.get(ctx.guild.categories, name="support")
@@ -44,6 +45,7 @@ async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> 
     )
 
     return new_channel
+
 
 @bot.event
 async def on_ready():
@@ -80,11 +82,14 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
         if discord.utils.get(ctx.guild.text_channels, id=support_channel_id):
             print(f"Support channel already exists for '{ctx.author}', updating existing support channel name.")
             await bot.get_channel(support_channel_id).edit(name=generate_channel_name(name))
+            await ctx.respond("Successfully updated your support channel name.", ephemeral=True)
+
         # Creating a new support channel (in the event the existing channel got deleted).
         else:
             print(f"Support channel does not exist for '{ctx.author}' (probable accidental deletion), creating new support channel.")
             new_channel: discord.TextChannel = await create_support_channel(ctx, name)
             src.database.update_support_channel_id(connection, ctx.author.id, ctx.guild.id, new_channel.id)
+            await ctx.respond("Successfully recreated your support channel.", ephemeral=True)
 
         return
 
@@ -93,6 +98,7 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
     new_support_channel = await create_support_channel(ctx, name)
     print(f"Successfully created support channel '{new_support_channel.name}'.")
 
+    # Registering new user in database.
     src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_support_channel.id)
 
     # End-user response.
