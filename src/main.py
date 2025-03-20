@@ -1,4 +1,3 @@
-# TODO: give user role to registered user, role allows for viewing stuff.
 # TODO: have default text placed into support channel.
 
 import discord
@@ -55,9 +54,9 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     # Creating the support role (if it did not already exist).
-    await create_role(guild, "Support Staff")
+    staff_role = await create_role(guild, "Support Staff")
     # Creating the generic registered user role (if it did not already exist).
-    await create_role(guild, "Registered User")
+    registered_user_role = await create_role(guild, "Registered User")
 
 
 @bot.command(description="Registers the user to the support system.")
@@ -93,13 +92,19 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
 
         return
 
-
     # Creating new member support channel.
     new_support_channel = await create_support_channel(ctx, name)
     print(f"Successfully created support channel '{new_support_channel.name}'.")
 
     # Registering new user in database.
     src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_support_channel.id)
+
+    # Adding member to Registered User role.
+    try:
+        registered_user_role: discord.Role = discord.utils.get(ctx.guild.roles, name="Registered User")
+        await ctx.author.add_roles(registered_user_role)
+    except BaseException:
+        await ctx.respond("Could not give you Registered User role (does not work for administrators).", ephemeral=True)
 
     # End-user response.
     await ctx.respond("Successfully registered you to the support system!", ephemeral=True)
