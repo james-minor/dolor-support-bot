@@ -22,9 +22,9 @@ def generate_channel_name(name: str) -> str:
 
 async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> discord.TextChannel:
     # Creating support channel category (if it did not already exist).
-    category = discord.utils.get(ctx.guild.categories, name="support")
+    category = discord.utils.get(ctx.guild.categories, name="tickets")
     if not category:
-        category = await ctx.guild.create_category("support")
+        category = await ctx.guild.create_category("tickets")
 
     # Creating role overrides to make member support channel private.
     overwrites = {
