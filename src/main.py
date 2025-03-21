@@ -16,6 +16,18 @@ bot = discord.Bot(intents=intents)
 connection: sqlite3.Connection = sqlite3.connect("database.db")
 src.database.initialize(connection)
 
+class RegisterModal(discord.ui.Modal):
+    def __init__(self):
+        super().__init__(title="Register")
+
+        self.name_input = discord.ui.InputText(label="Enter your name:", style=discord.InputTextStyle.short)
+        self.add_item(self.name_input)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f"Thank you for registering, {self.name_input.value}!", ephemeral=True)
+        # await register(interaction.context, self.name_input.value)
+
+
 def generate_channel_name(name: str) -> str:
     return "ticket-" + "-".join(name.lower().split())
 
@@ -50,6 +62,23 @@ async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> 
     return new_channel
 
 
+async def create_register_button(guild: discord.Guild):
+    register_button = discord.ui.Button(label="Register", style=discord.ButtonStyle.primary)
+
+    async def register_button_callback(interaction: discord.Interaction):
+        register_modal = RegisterModal()
+        await interaction.response.send_modal(register_modal)
+
+    register_button.callback = register_button_callback
+
+    view = discord.ui.View()
+    view.add_item(register_button)
+
+    send_channel = discord.utils.get(guild.text_channels, name="general")
+    if send_channel:
+        await send_channel.send(content=f"Welcome to the server, click this button to open a ticket!", view=view)
+
+
 @bot.event
 async def on_ready():
     print(f"Support bot logged in as {bot.user}!")
@@ -62,6 +91,9 @@ async def on_guild_join(guild: discord.Guild):
     # Creating the generic registered user role (if it did not already exist).
     student_role = await create_role(guild, "Student")
     await student_role.edit(color=discord.Color(0x4499d5))
+
+    # Load the register button view.
+    await create_register_button(guild)
 
 
 @bot.command(description="Registers the user to the support system.")
@@ -127,6 +159,7 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
 # Attempts to create a user role in a selected guild. If the role already exists, returns the role object.
 # Otherwise, creates the role and returns the role object.
 async def create_role(guild: discord.Guild, role_name: str) -> discord.Role:
+    # TODO: fix issue where if role exists, crashes bot on guild join
     if not discord.utils.get(guild.roles, name=role_name):
         new_role: discord.Role = await guild.create_role(name=role_name)
         print(f"Successfully created role '{role_name}'.")
