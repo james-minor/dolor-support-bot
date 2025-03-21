@@ -1,4 +1,5 @@
 import discord
+import datetime
 
 # Creates and returns a generated support ticket channel name.
 def generate_channel_name(name: str) -> str:
@@ -52,3 +53,7 @@ def is_valid_name_parameter(name: str) -> bool:
     if not name.replace(" ", "").isalpha():
         return False
     return True
+
+
+def get_date_time() -> str:
+    return datetime.datetime.now().replace(microsecond=0).isoformat()
