@@ -98,7 +98,7 @@ class SupportBot(discord.Bot):
 
         # Adding member to Student role.
         try:
-            registered_user_role: discord.Role = discord.utils.get(guild.roles, name="Student")
+            registered_user_role: discord.Role = discord.utils.get(guild.roles, name=self.json_config["USER_ROLE"])
 
             if registered_user_role:
                 print(f"Successfully retrieved Student role.")
