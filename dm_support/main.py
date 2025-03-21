@@ -24,9 +24,9 @@ async def on_ready():
     print(f"Support bot logged in as {bot.user}!")
 
 
-@bot.command(description="Creates a register support ticket button")
-async def button(ctx: discord.ApplicationContext):
-    await dm_support.messaging.send_register_direct_message(ctx.user, ctx.guild)
+@bot.command(description="Resends the registration Direct Message.", dm_support=False)
+async def resend_register_invite(ctx: discord.ApplicationContext):
+    await dm_support.messaging.send_register_direct_message(ctx.user, ctx.guild, register_callback=register_user)
 
 
 @bot.event
