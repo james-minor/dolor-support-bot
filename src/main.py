@@ -88,9 +88,11 @@ async def on_ready():
 async def on_guild_join(guild: discord.Guild):
     # Creating the support role (if it did not already exist).
     staff_role = await create_role(guild, "Support Staff")
+
     # Creating the generic registered user role (if it did not already exist).
     student_role = await create_role(guild, "Student")
-    await student_role.edit(color=discord.Color(0x4499d5))
+    if student_role:
+        await student_role.edit(color=discord.Color(0x4499d5))
 
     # Load the register button view.
     await create_register_button(guild)
@@ -158,15 +160,13 @@ async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOp
 
 # Attempts to create a user role in a selected guild. If the role already exists, returns the role object.
 # Otherwise, creates the role and returns the role object.
-async def create_role(guild: discord.Guild, role_name: str) -> discord.Role:
-    # TODO: fix issue where if role exists, crashes bot on guild join
+async def create_role(guild: discord.Guild, role_name: str) -> discord.Role | None:
     if not discord.utils.get(guild.roles, name=role_name):
         new_role: discord.Role = await guild.create_role(name=role_name)
         print(f"Successfully created role '{role_name}'.")
-    else:
-        new_role: discord.Role = discord.utils.get(guild.roles, name=role_name)
+        return new_role
 
-    return new_role
+    return None
 
 
 bot.run(str(os.getenv("DISCORD_API_TOKEN")))
