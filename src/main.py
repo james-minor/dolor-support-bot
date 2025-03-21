@@ -24,30 +24,30 @@ class RegisterModal(discord.ui.Modal):
         self.add_item(self.name_input)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f"Thank you for registering, {self.name_input.value}!", ephemeral=True)
-        # await register(interaction.context, self.name_input.value)
+        await interaction.response.defer()
+        await register_user(interaction, self.name_input.value)
 
 
 def generate_channel_name(name: str) -> str:
     return "ticket-" + "-".join(name.lower().split())
 
 
-async def create_support_channel(ctx: discord.ApplicationContext, name: str) -> discord.TextChannel:
+async def create_support_channel(interaction: discord.Interaction, name: str) -> discord.TextChannel:
     # Creating support channel category (if it did not already exist).
-    category = discord.utils.get(ctx.guild.categories, name="tickets")
+    category = discord.utils.get(interaction.guild.categories, name="tickets")
     if not category:
-        category = await ctx.guild.create_category("tickets")
+        category = await interaction.guild.create_category("tickets")
 
     # Creating role overrides to make member support channel private.
     overwrites = {
-        ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        discord.utils.get(ctx.guild.roles, name="Support Staff"): discord.PermissionOverwrite(read_messages=True),
-        ctx.guild.get_member(ctx.author.id): discord.PermissionOverwrite(read_messages=True),
+        interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        discord.utils.get(interaction.guild.roles, name="Support Staff"): discord.PermissionOverwrite(read_messages=True),
+        interaction.guild.get_member(interaction.user.id): discord.PermissionOverwrite(read_messages=True),
     }
 
     # Creating the support channel.
     new_channel_name: str = generate_channel_name(name)
-    new_channel: discord.TextChannel = await ctx.guild.create_text_channel(
+    new_channel: discord.TextChannel = await interaction.guild.create_text_channel(
         name=new_channel_name,
         category=category,
         overwrites=overwrites
@@ -84,6 +84,12 @@ async def on_ready():
     print(f"Support bot logged in as {bot.user}!")
 
 
+@bot.command(description="Creates a register support ticket button")
+async def button(ctx: discord.ApplicationContext):
+    await create_register_button(ctx.guild)
+    await ctx.respond("Created register button.", ephemeral=True)
+
+
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     # Creating the support role (if it did not already exist).
@@ -98,67 +104,66 @@ async def on_guild_join(guild: discord.Guild):
     await create_register_button(guild)
 
 
-@bot.command(description="Registers the user to the support system.")
-async def register(ctx: discord.ApplicationContext, name: discord.SlashCommandOptionType.string):
+async def register_user(interaction: discord.Interaction, name: str):
     # Name parameter validation.
     if len(name) < 1 or len(name) > 35:
-        await ctx.respond("Names must be between 1 and 35 characters long.", ephemeral=True)
+        await interaction.followup.send("Names must be between 1 and 35 characters long.", ephemeral=True)
         return
     if not name.replace(" ", "").isalpha():
-        await ctx.respond("Names may only contain letters.", ephemeral=True)
+        await interaction.followup.send("Names may only contain letters.", ephemeral=True)
         return
 
-    # Creating member object.
-    member: discord.Member = ctx.guild.get_member(ctx.author.id)
+    # Getting local member object from interaction.
+    member: discord.Member = interaction.guild.get_member(interaction.user.id)
 
     # Setting member nickname.
     try:
         await member.edit(nick=name)
     except BaseException:
-        await ctx.respond("Could not change your nickname (does not work for admins).", ephemeral=True)
+        await interaction.followup.send("Could not change your nickname (does not work for admins).", ephemeral=True)
 
     # Updating existing support channel name.
-    if src.database.is_user_registered(connection, ctx.author.id, ctx.guild.id):
-        print(f"User '{ctx.author}' already registered.")
+    if src.database.is_user_registered(connection, interaction.user.id, interaction.guild.id):
+        print(f"User '{interaction.user}' already registered.")
 
         # Getting the support channel id for the user.
-        support_channel_id: int = src.database.get_support_channel_id(connection, ctx.author.id, ctx.guild.id)
+        support_channel_id: int = src.database.get_support_channel_id(connection, interaction.user.id, interaction.guild.id)
 
         # Updating the existing support channel.
-        if discord.utils.get(ctx.guild.text_channels, id=support_channel_id):
-            print(f"Support channel already exists for '{ctx.author}', updating existing support channel name.")
+        if discord.utils.get(interaction.guild.text_channels, id=support_channel_id):
+            print(f"Support channel already exists for '{interaction.user}', updating existing support channel name.")
             await bot.get_channel(support_channel_id).edit(name=generate_channel_name(name))
-            await ctx.respond("Successfully updated your support channel name.", ephemeral=True)
+            await interaction.followup.send("Successfully updated your support channel name.", ephemeral=True)
 
         # Creating a new support channel (in the event the existing channel got deleted).
         else:
-            print(f"Support channel does not exist for '{ctx.author}' (probable accidental deletion), creating new support channel.")
-            new_channel: discord.TextChannel = await create_support_channel(ctx, name)
-            src.database.update_support_channel_id(connection, ctx.author.id, ctx.guild.id, new_channel.id)
-            await ctx.respond("Successfully recreated your support channel.", ephemeral=True)
+            print(f"Support channel does not exist for '{interaction.user}' (probable accidental deletion), creating new support channel.")
+            new_channel: discord.TextChannel = await create_support_channel(interaction, name)
+            src.database.update_support_channel_id(connection, interaction.user.id, interaction.guild.id, new_channel.id)
+            await interaction.followup.send("Successfully recreated your support channel.", ephemeral=True)
 
         return
 
     # Creating new member support channel.
-    new_support_channel = await create_support_channel(ctx, name)
+    new_support_channel = await create_support_channel(interaction, name)
     print(f"Successfully created support channel '{new_support_channel.name}'.")
 
     # Registering new user in database.
-    src.database.register_user(connection, ctx.author.id, ctx.guild.id, new_support_channel.id)
+    src.database.register_user(connection, interaction.user.id, interaction.guild.id, new_support_channel.id)
 
     # Adding member to Student role.
     try:
-        registered_user_role: discord.Role = discord.utils.get(ctx.guild.roles, name="Student")
-        await ctx.author.add_roles(registered_user_role)
+        registered_user_role: discord.Role = discord.utils.get(interaction.guild.roles, name="Student")
+        await interaction.user.add_roles(registered_user_role)
     except BaseException:
-        await ctx.respond("Could not give you Student role (does not work for administrators).", ephemeral=True)
+        await interaction.followup.send("Could not give you Student role (does not work for administrators).", ephemeral=True)
 
     # End-user response.
-    await ctx.respond("Successfully registered you to the support system!", ephemeral=True)
-    print(f"Successfully registered user '{ctx.user}' to the support system.")
+    await interaction.followup.send("Successfully registered you to the support system!", ephemeral=True)
+    print(f"Successfully registered user '{interaction.user}' to the support system.")
 
 
-# Attempts to create a user role in a selected guild. If the role already exists, returns the role object.
+# Attempts to create a user role in a selected guild. If the role already exists, returns None.
 # Otherwise, creates the role and returns the role object.
 async def create_role(guild: discord.Guild, role_name: str) -> discord.Role | None:
     if not discord.utils.get(guild.roles, name=role_name):
