@@ -1,0 +1,6 @@
+{
+  "STAFF_ROLE": "Support Staff",
+  "USER_ROLE": "Student",
+  "REGISTER_DIRECT_MESSAGE": "Welcome to the server, click this button to open a ticket!",
+  "NEW_TICKET_TEXT": "Thank you for opening a support ticket (generated from config.json)."
+}
