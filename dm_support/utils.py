@@ -1,6 +1,9 @@
 import discord
 import datetime
 
+import dm_support.support_bot
+
+
 # Creates and returns a generated support ticket channel name.
 def generate_channel_name(name: str) -> str:
     return "ticket-" + "-".join(name.lower().split())
@@ -17,7 +20,7 @@ async def create_role(guild: discord.Guild, role_name: str) -> discord.Role | No
     return None
 
 
-async def create_support_channel(interaction: discord.Interaction, guild: discord.Guild, name: str) -> discord.TextChannel:
+async def create_support_channel(interaction: discord.Interaction, guild: discord.Guild, name: str, bot: dm_support.support_bot.SupportBot) -> discord.TextChannel:
     # Creating support channel category (if it did not already exist).
     category = discord.utils.get(guild.categories, name="tickets")
     if not category:
@@ -39,10 +42,7 @@ async def create_support_channel(interaction: discord.Interaction, guild: discor
     )
 
     # Printing welcome text to support channel.
-    welcome_file_path = "welcome.txt"
-    with open(welcome_file_path, "r") as welcome_file:
-        content = welcome_file.read()
-        await new_channel.send(content=content)
+    await new_channel.send(content=bot.json_config["NEW_TICKET_TEXT"])
 
     return new_channel
 

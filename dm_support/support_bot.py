@@ -83,14 +83,14 @@ class SupportBot(discord.Bot):
             # Creating a new support channel (in the event the existing channel got deleted).
             else:
                 print(f"Support channel does not exist for '{interaction.user}' (probable accidental deletion), creating new support channel.")
-                new_channel: discord.TextChannel = await dm_support.utils.create_support_channel(interaction, guild, name)
+                new_channel: discord.TextChannel = await dm_support.utils.create_support_channel(interaction, guild, name, self)
                 dm_support.database.update_support_channel_id(self.connection, interaction.user.id, guild.id, new_channel.id)
                 await interaction.followup.send("Successfully recreated your support channel.", ephemeral=True)
 
             return
 
         # Creating new member support channel.
-        new_support_channel = await dm_support.utils.create_support_channel(interaction, guild, name)
+        new_support_channel = await dm_support.utils.create_support_channel(interaction, guild, name, self)
         print(f"Successfully created support channel '{new_support_channel.name}'.")
 
         # Registering new user in database.
