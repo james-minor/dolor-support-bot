@@ -69,20 +69,20 @@ class SupportBot(discord.Bot):
 
         # Updating existing support channel name.
         if dm_support.database.is_user_registered(self.connection, interaction.user.id, guild.id):
-            print(f"User '{interaction.user}' already registered.")
+            print(f"[{dm_support.utils.get_date_time()}] User '{interaction.user}' already registered.")
 
             # Getting the support channel id for the user.
             support_channel_id: int = dm_support.database.get_support_channel_id(self.connection, interaction.user.id, guild.id)
 
             # Updating the existing support channel.
             if discord.utils.get(guild.text_channels, id=support_channel_id):
-                print(f"Support channel already exists for '{interaction.user}', updating existing support channel name.")
+                print(f"[{dm_support.utils.get_date_time()}] Support channel already exists for '{interaction.user}', updating existing support channel name.")
                 await self.get_channel(support_channel_id).edit(name=dm_support.utils.generate_channel_name(name))
                 await interaction.followup.send("Successfully updated your support channel name.", ephemeral=True)
 
             # Creating a new support channel (in the event the existing channel got deleted).
             else:
-                print(f"Support channel does not exist for '{interaction.user}' (probable accidental deletion), creating new support channel.")
+                print(f"[{dm_support.utils.get_date_time()}] Support channel does not exist for '{interaction.user}' (probable accidental deletion), creating new support channel.")
                 new_channel: discord.TextChannel = await dm_support.utils.create_support_channel(interaction, guild, name, self)
                 dm_support.database.update_support_channel_id(self.connection, interaction.user.id, guild.id, new_channel.id)
                 await interaction.followup.send("Successfully recreated your support channel.", ephemeral=True)
@@ -91,7 +91,7 @@ class SupportBot(discord.Bot):
 
         # Creating new member support channel.
         new_support_channel = await dm_support.utils.create_support_channel(interaction, guild, name, self)
-        print(f"Successfully created support channel '{new_support_channel.name}'.")
+        print(f"[{dm_support.utils.get_date_time()}] Successfully created support channel '{new_support_channel.name}'.")
 
         # Registering new user in database.
         dm_support.database.register_user(self.connection, interaction.user.id, guild.id, new_support_channel.id)
@@ -101,15 +101,15 @@ class SupportBot(discord.Bot):
             registered_user_role: discord.Role = discord.utils.get(guild.roles, name=self.json_config["USER_ROLE"])
 
             if registered_user_role:
-                print(f"Successfully retrieved Student role.")
+                print(f"[{dm_support.utils.get_date_time()}] Successfully retrieved Student role.")
                 await member.add_roles(registered_user_role)
-                print(f"Assigned student role to {member}")
+                print(f"[{dm_support.utils.get_date_time()}] Assigned student role to {member}")
             else:
-                print("Had issues retrieving registered user role.")
+                print(f"[{dm_support.utils.get_date_time()}] Had issues retrieving registered user role.")
 
         except BaseException:
-            await interaction.followup.send("Could not give you Student role (does not work for administrators).", ephemeral=True)
+            await interaction.followup.send(f"[{dm_support.utils.get_date_time()}] Could not give you Student role (does not work for administrators).", ephemeral=True)
 
         # End-user response.
-        await interaction.followup.send("Successfully registered you to the support system!", ephemeral=True)
-        print(f"Successfully registered user '{interaction.user}' to the support system.")
+        await interaction.followup.send(f"[{dm_support.utils.get_date_time()}] Successfully registered you to the support system!", ephemeral=True)
+        print(f"[{dm_support.utils.get_date_time()}] Successfully registered user '{interaction.user}' to the support system.")
