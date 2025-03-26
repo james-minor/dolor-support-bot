@@ -47,4 +47,4 @@ async def send_register_direct_message(user: discord.User, guild: discord.Guild,
     dm_channel = await user.create_dm()
     await send_register_button(guild.id, dm_channel, register_callback)
 
-    print(f"Sent registration direct message to user '{user}'")
+    print(f"[{dm_support.utils.get_date_time()}] Sent registration direct message to user '{user}'")
