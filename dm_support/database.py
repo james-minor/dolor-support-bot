@@ -10,6 +10,7 @@ def initialize(database_connection: sqlite3.Connection):
           `support_channel_id` int not null
         )
     """)
+    database_connection.commit()
 
 # Returns True if the passed Discord user is registered in a selected Guild, otherwise returns False.
 def is_user_registered(database_connection: sqlite3.Connection, user_id: int, guild_id: int) -> bool:
