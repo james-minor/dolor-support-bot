@@ -33,6 +33,7 @@ class SupportBot(discord.Bot):
 
     @staticmethod
     def get_intents() -> discord.Intents:
+        # return discord.Intents(messages=True, members=True, message_content=True, dm_messages=True, guild_messages=True, guilds=True)
         return discord.Intents.all()
 
 
@@ -108,8 +109,8 @@ class SupportBot(discord.Bot):
                 print(f"[{dm_support.utils.get_date_time()}] Had issues retrieving registered user role.")
 
         except BaseException:
-            await interaction.followup.send(f"[{dm_support.utils.get_date_time()}] Could not give you Student role (does not work for administrators).", ephemeral=True)
+            await interaction.followup.send(f"Could not give you Student role (does not work for administrators).", ephemeral=True)
 
         # End-user response.
-        await interaction.followup.send(f"[{dm_support.utils.get_date_time()}] Successfully registered you to the support system!", ephemeral=True)
+        await interaction.followup.send(f"Successfully registered you to the support system!", ephemeral=True)
         print(f"[{dm_support.utils.get_date_time()}] Successfully registered user '{interaction.user}' to the support system.")
