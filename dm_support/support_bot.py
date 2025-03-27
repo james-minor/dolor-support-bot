@@ -68,6 +68,20 @@ class SupportBot(discord.Bot):
         except BaseException:
             await interaction.followup.send("Could not change your nickname (does not work for admins).", ephemeral=True)
 
+        # Adding member to Student role.
+        try:
+            registered_user_role: discord.Role = discord.utils.get(guild.roles, name=self.json_config["USER_ROLE"])
+
+            if registered_user_role:
+                print(f"[{dm_support.utils.get_date_time()}] Successfully retrieved Student role.")
+                await member.add_roles(registered_user_role)
+                print(f"[{dm_support.utils.get_date_time()}] Assigned student role to {member}")
+            else:
+                print(f"[{dm_support.utils.get_date_time()}] Had issues retrieving registered user role.")
+
+        except BaseException:
+            await interaction.followup.send(f"Could not give you Student role (does not work for administrators).", ephemeral=True)
+
         # Updating existing support channel name.
         if dm_support.database.is_user_registered(self.connection, interaction.user.id, guild.id):
             print(f"[{dm_support.utils.get_date_time()}] User '{interaction.user}' already registered.")
@@ -96,20 +110,6 @@ class SupportBot(discord.Bot):
 
         # Registering new user in database.
         dm_support.database.register_user(self.connection, interaction.user.id, guild.id, new_support_channel.id)
-
-        # Adding member to Student role.
-        try:
-            registered_user_role: discord.Role = discord.utils.get(guild.roles, name=self.json_config["USER_ROLE"])
-
-            if registered_user_role:
-                print(f"[{dm_support.utils.get_date_time()}] Successfully retrieved Student role.")
-                await member.add_roles(registered_user_role)
-                print(f"[{dm_support.utils.get_date_time()}] Assigned student role to {member}")
-            else:
-                print(f"[{dm_support.utils.get_date_time()}] Had issues retrieving registered user role.")
-
-        except BaseException:
-            await interaction.followup.send(f"Could not give you Student role (does not work for administrators).", ephemeral=True)
 
         # End-user response.
         await interaction.followup.send(f"Successfully registered you to the support system!", ephemeral=True)
