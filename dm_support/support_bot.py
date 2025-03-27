@@ -52,7 +52,7 @@ class SupportBot(discord.Bot):
 
 
     async def on_member_join(self, member: discord.Member):
-        await dm_support.messaging.send_register_direct_message(member._user, member.guild, register_callback=self.register_user)
+        await dm_support.messaging.send_register_direct_message(self.json_config["REGISTER_DIRECT_MESSAGE"], member._user, member.guild, register_callback=self.register_user)
 
 
     async def register_user(self, interaction: discord.Interaction, name: str, guild_id: int):
