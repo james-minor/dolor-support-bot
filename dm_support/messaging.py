@@ -28,7 +28,7 @@ class RegisterModal(discord.ui.Modal):
         await self.register_callback(interaction, self.name_input.value, self.guild_id)
 
 
-async def send_register_button(guild_id: int, channel: discord.DMChannel, register_callback: typing.Callable):
+async def send_register_button(message: str, guild_id: int, channel: discord.DMChannel, register_callback: typing.Callable):
     register_button = discord.ui.Button(label="Register", style=discord.ButtonStyle.primary)
 
     async def register_button_callback(interaction: discord.Interaction):
@@ -40,11 +40,11 @@ async def send_register_button(guild_id: int, channel: discord.DMChannel, regist
     view = discord.ui.View()
     view.add_item(register_button)
 
-    await channel.send(content=f"Welcome to the server, click this button to open a ticket!", view=view)
+    await channel.send(content=f"{message}", view=view)
 
 
-async def send_register_direct_message(user: discord.User, guild: discord.Guild, register_callback: typing.Callable):
+async def send_register_direct_message(message: str, user: discord.User, guild: discord.Guild, register_callback: typing.Callable):
     dm_channel = await user.create_dm()
-    await send_register_button(guild.id, dm_channel, register_callback)
+    await send_register_button(message, guild.id, dm_channel, register_callback)
 
     print(f"[{dm_support.utils.get_date_time()}] Sent registration direct message to user '{user}'")

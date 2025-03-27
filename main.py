@@ -22,7 +22,7 @@ bot = dm_support.support_bot.SupportBot()
 # Defining bot commands.
 @bot.command(description="Resends the registration Direct Message.", dm_support=False)
 async def resend_register_invite(ctx: discord.ApplicationContext):
-    await dm_support.messaging.send_register_direct_message(ctx.user, ctx.guild, register_callback=bot.register_user)
+    await dm_support.messaging.send_register_direct_message(bot.json_config["REGISTER_DIRECT_MESSAGE"], ctx.user, ctx.guild, register_callback=bot.register_user)
     await ctx.interaction.respond("I have sent a support ticket button to your Direct Messages!", ephemeral=True)
 
 # Starting discord bot.
