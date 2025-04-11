@@ -40,6 +40,9 @@ class SupportBot(discord.Bot):
     async def on_ready(self):
         print(f"[{dm_support.utils.get_date_time()}] Support Bot successfully logged in as {self.user}!")
 
+        # Making the register button persistent.
+        self.add_view(dm_support.messaging.PersistentRegisterView(self.register_user))
+
 
     async def on_guild_join(self, guild: discord.Guild):
         # Creating the support role (if it did not already exist).
@@ -50,9 +53,14 @@ class SupportBot(discord.Bot):
         if student_role:
             await student_role.edit(color=discord.Color(0x4499d5))
 
+        # Getting welcome channel.
+        welcome_channel = self.get_channel(int(self.json_config["WELCOME_CHANNEL_ID"]))
+        if welcome_channel is None:
+            print(f"[{dm_support.utils.get_date_time()}] Could not find welcome channel, aborting startup...")
+            sys.exit(1)
 
-    async def on_member_join(self, member: discord.Member):
-        await dm_support.messaging.send_register_direct_message(self.json_config["REGISTER_DIRECT_MESSAGE"], member._user, member.guild, register_callback=self.register_user)
+        # Sending initial message to server.
+        await welcome_channel.send(self.json_config["REGISTER_DIRECT_MESSAGE"], view=dm_support.messaging.PersistentRegisterView(self.register_user))
 
 
     async def register_user(self, interaction: discord.Interaction, name: str, guild_id: int):
